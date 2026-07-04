@@ -1,4 +1,6 @@
 streamlit>=1.32
 sqlalchemy>=2.0
-playwright>=1.42
 python-dotenv>=1.0
+bcrypt>=4.1
+python-jose[cryptography]>=3.3
+loguru>=0.7

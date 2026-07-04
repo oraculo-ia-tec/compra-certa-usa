@@ -1,17 +1,15 @@
 """
-AGENTE 3 - UI-SYSTEMS
-Ponto de entrada Streamlit. Sem FastAPI, sem servidor separado.
+COMPRA CERTA USA — Ponto de entrada Streamlit.
+Inicializa banco de dados, migrações e seed na primeira execução.
 """
 import streamlit as st
-from models.database import init_db
+from models.seed import init_db_and_seed
+from components.session import is_logged_in, get_current_user, clear_session
 
 st.set_page_config(page_title="COMPRA CERTA USA", page_icon="📦", layout="wide")
-init_db()
 
-if "cliente_id" not in st.session_state:
-    st.session_state.cliente_id = None
-if "cliente_nome" not in st.session_state:
-    st.session_state.cliente_nome = None
+# Inicializa tabelas + migrações + seed (seguro executar em todo cold start)
+init_db_and_seed()
 
 st.markdown("""
 <style>
@@ -23,9 +21,21 @@ st.markdown("""
 st.markdown('<div class="main-header">📦 COMPRA CERTA USA</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Redirecionamento de compras dos EUA para o Brasil</div>', unsafe_allow_html=True)
 
-st.info("Use o menu lateral para navegar entre Onboarding, Novo Pedido, Meus Pedidos e Administracao.")
-
-if st.session_state.cliente_id:
-    st.success(f"Logado como {st.session_state.cliente_nome}")
+if is_logged_in():
+    user = get_current_user()
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.success(f"Olá, **{user.get('full_name', '')}**! Use o menu lateral para navegar.")
+    with col2:
+        if st.button("Sair", use_container_width=True):
+            clear_session()
+            st.rerun()
 else:
-    st.warning("Nenhum cliente logado. Acesse a pagina de Onboarding / Login.")
+    st.info("Use o menu lateral para navegar entre as páginas.")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔐 Fazer login", use_container_width=True, type="primary"):
+            st.switch_page("pages/Login.py")
+    with col2:
+        if st.button("📝 Criar conta", use_container_width=True):
+            st.switch_page("pages/Cadastro.py")

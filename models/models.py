@@ -2,15 +2,74 @@
 AGENTE 1 - DBA-ARCH
 Modelagem inicial do banco de dados (SQLite via SQLAlchemy).
 """
+import enum
 from datetime import datetime
 from enum import Enum as PyEnum
 from sqlalchemy import (
     Column, Integer, String, Float, DateTime, ForeignKey, Enum, Boolean, Text
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
 Base = declarative_base()
 
+_E = dict(native_enum=False)
+
+# ---------------------------------------------------------------------------
+# Enums de autenticação
+# ---------------------------------------------------------------------------
+
+class UserRole(str, enum.Enum):
+    ADMIN        = "admin"
+    OPERATOR     = "operator"
+    CLIENT       = "client"
+    AI_DEVELOPER = "ai_developer"
+
+
+class UserStatus(str, enum.Enum):
+    PENDING  = "pending"
+    ACTIVE   = "active"
+    INACTIVE = "inactive"
+    BANNED   = "banned"
+
+
+# ---------------------------------------------------------------------------
+# Modelo de usuário (autenticação)
+# ---------------------------------------------------------------------------
+
+class User(Base):
+    __tablename__ = "users"
+
+    id:              Mapped[int]           = mapped_column(Integer, primary_key=True, index=True)
+    full_name:       Mapped[str]           = mapped_column(String(150), nullable=False)
+    email:           Mapped[str]           = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str]           = mapped_column(String(512), nullable=False)
+    role:            Mapped[UserRole]      = mapped_column(SAEnum(UserRole,   **_E), default=UserRole.CLIENT)
+    status:          Mapped[UserStatus]    = mapped_column(SAEnum(UserStatus, **_E), default=UserStatus.PENDING)
+
+    # Verificação de e-mail
+    is_email_confirmed:           Mapped[bool]           = mapped_column(Boolean,      default=False)
+    verification_code:            Mapped[str | None]     = mapped_column(String(512),  nullable=True)
+    verification_code_expires_at: Mapped[datetime | None] = mapped_column(DateTime,    nullable=True)
+    verification_attempts:        Mapped[int]            = mapped_column(Integer,      default=0)
+    last_code_sent_at:            Mapped[datetime | None] = mapped_column(DateTime,    nullable=True)
+
+    # Token de ativação (legado / seed admin)
+    activation_token:             Mapped[str | None]     = mapped_column(String(512),  nullable=True)
+    activation_token_expires_at:  Mapped[datetime | None] = mapped_column(DateTime,    nullable=True)
+
+    # Perfil e acesso
+    avatar_url:           Mapped[str | None]  = mapped_column(Text,    nullable=True)
+    is_first_access:      Mapped[bool]        = mapped_column(Boolean, default=True)
+    subscription_active:  Mapped[bool]        = mapped_column(Boolean, default=False)
+    last_login_at:        Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_ip:        Mapped[str | None]  = mapped_column(String(45), nullable=True)
+    created_at:           Mapped[datetime]    = mapped_column(DateTime, default=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Enums de pedidos
+# ---------------------------------------------------------------------------
 
 class StatusPedido(PyEnum):
     AGUARDANDO_COMPRA = "aguardando_compra"
