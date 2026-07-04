@@ -6,7 +6,6 @@ from components.session import is_logged_in
 from components.ui import inject_css
 from services.auth import register, AuthError
 
-st.set_page_config(page_title="Cadastro — Compra Certa USA", page_icon="📦", layout="centered")
 inject_css()
 
 if is_logged_in():

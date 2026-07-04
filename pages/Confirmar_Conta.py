@@ -4,7 +4,6 @@ from components.session import is_logged_in
 from components.ui import inject_css
 from services.auth import confirm_account, resend_confirmation, AuthError
 
-st.set_page_config(page_title="Confirmar Conta — Compra Certa USA", page_icon="📧", layout="centered")
 inject_css()
 
 if is_logged_in():

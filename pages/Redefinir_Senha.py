@@ -9,7 +9,6 @@ import streamlit as st
 from components.ui import inject_css
 from services.auth import request_password_reset, reset_password, AuthError
 
-st.set_page_config(page_title="Redefinir Senha — Compra Certa USA", page_icon="🔑", layout="centered")
 inject_css()
 
 st.html('<p class="ccu-page-title">🔑 Redefinir senha</p><hr class="ccu-page-divider">')
