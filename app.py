@@ -19,13 +19,15 @@ if "db_initialized" not in st.session_state:
     st.session_state["db_initialized"] = True
 
 # ── Páginas públicas (não requerem login) ──────────────────────────────
-login_page    = st.Page("pages/Login.py",          title="Login",           icon="🔐", default=True)
+assistente_pub = st.Page("pages/0_Assistente.py",    title="Assistente IA",    icon="🤖", default=True)
+login_page    = st.Page("pages/Login.py",          title="Login",           icon="🔐")
 cadastro_page = st.Page("pages/Cadastro.py",        title="Cadastro",        icon="📝")
 confirm_page  = st.Page("pages/Confirmar_Conta.py", title="Confirmar Conta", icon="📧")
 reset_page    = st.Page("pages/Redefinir_Senha.py", title="Redefinir Senha", icon="🔑")
 
 # ── Páginas protegidas ─────────────────────────────────────────────────
-home_page     = st.Page("pages/1_Onboarding.py",    title="Início",            icon="🏠", default=True)
+assistente_page= st.Page("pages/0_Assistente.py",    title="Assistente IA",     icon="🤖", default=True)
+home_page     = st.Page("pages/1_Onboarding.py",    title="Início",            icon="🏠")
 pedido_page   = st.Page("pages/2_Novo_Pedido.py",    title="Novo Pedido",       icon="🛒")
 orcamento_page= st.Page("pages/3_Orcamento.py",      title="Orçamento",         icon="💰")
 meus_page     = st.Page("pages/4_Meus_Pedidos.py",   title="Meus Pedidos",      icon="📋")
@@ -38,8 +40,8 @@ if is_logged_in():
     role  = user.get("role", "client")
     name  = user.get("full_name", "")
 
-    menu_principal = [home_page, pedido_page, orcamento_page, meus_page, detalhe_page, rastreio_page]
-    pages = {"📦 Menu": menu_principal}
+    menu_principal = [assistente_page, home_page, pedido_page, orcamento_page, meus_page, detalhe_page, rastreio_page]
+    pages = {"🤖 IA & Menu": menu_principal}
 
     if role in ("admin", "operator", "ai_developer"):
         pages["🔧 Gestão"] = [admin_page]
@@ -55,7 +57,7 @@ if is_logged_in():
             clear_session()
             st.rerun()
 else:
-    pages = {"🔐 Acesso": [login_page, cadastro_page, confirm_page, reset_page]}
+    pages = {"🤖 Assistente": [assistente_pub], "🔐 Acesso": [login_page, cadastro_page, confirm_page, reset_page]}
 
 pg = st.navigation(pages)
 pg.run()
