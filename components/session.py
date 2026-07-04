@@ -8,6 +8,7 @@ def set_session(token_response: dict):
     st.session_state["user"] = {
         "id":              token_response.get("user_id"),
         "full_name":       token_response.get("full_name"),
+        "email":           token_response.get("email"),
         "role":            token_response.get("role"),
         "status":          token_response.get("status"),
         "is_first_access": token_response.get("is_first_access"),

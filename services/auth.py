@@ -82,6 +82,7 @@ def login(email: str, password: str, ip: Optional[str] = None) -> dict:
             "token_type": "bearer",
             "user_id": user.id,
             "full_name": user.full_name,
+            "email": user.email,
             "role": user.role.value,
             "status": user.status.value,
             "is_first_access": user.is_first_access,
@@ -318,5 +319,42 @@ def reset_password(email: str, token: str, new_password: str) -> dict:
         db.commit()
         logger.info(f"[auth] Senha redefinida para {email}")
         return {"email": user.email}
+    finally:
+        db.close()
+
+
+def update_profile(user_id: int, full_name: Optional[str] = None,
+                   avatar_b64: Optional[str] = None,
+                   new_password: Optional[str] = None,
+                   current_password: Optional[str] = None) -> dict:
+    """Atualiza nome, avatar e/ou senha do usuário."""
+    db: Session = get_session()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise AuthError("Usuário não encontrado.", 404)
+
+        if new_password:
+            if not current_password:
+                raise AuthError("Informe a senha atual para alterar a senha.", 400)
+            if not verify_password(current_password, user.hashed_password):
+                raise AuthError("Senha atual incorreta.", 401)
+            if len(new_password) < 8:
+                raise AuthError("A nova senha deve ter ao menos 8 caracteres.", 400)
+            user.hashed_password = hash_password(new_password)
+
+        if full_name and full_name.strip():
+            user.full_name = full_name.strip()
+
+        if avatar_b64 is not None:
+            user.avatar_url = avatar_b64
+
+        db.commit()
+        logger.info(f"[auth] Perfil atualizado: user_id={user_id}")
+        return {
+            "user_id":   user.id,
+            "full_name": user.full_name,
+            "avatar_url": user.avatar_url,
+        }
     finally:
         db.close()
