@@ -12,6 +12,11 @@ page_header("Configuração da Conta", "Gerencie seu perfil, foto e senha.", "�
 user    = get_current_user()
 user_id = get_user_id()
 
+# Garante que valores None não quebrem operações de string
+_name   = user.get("full_name") or ""
+_role   = user.get("role") or "client"
+_status = user.get("status") or ""
+
 # ── Avatar atual ──────────────────────────────────────────────────────────────
 avatar_url = user.get("avatar_url") or st.session_state.get("user", {}).get("avatar_url")
 
@@ -26,7 +31,7 @@ with col_av:
         </div>
         """)
     else:
-        initials = "".join(w[0].upper() for w in user.get("full_name", "U").split()[:2])
+        initials = "".join(w[0].upper() for w in (_name or "U").split()[:2]) or "U"
         st.html(f"""
         <div style="text-align:center;">
           <div style="display:inline-flex;align-items:center;justify-content:center;
@@ -40,9 +45,9 @@ with col_av:
     st.caption("Foto de perfil atual")
 
 with col_info:
-    st.markdown(f"**Nome:** {user.get('full_name', '')}")
-    st.markdown(f"**Role:** {user.get('role', '').capitalize()}")
-    st.markdown(f"**Status:** {user.get('status', '').capitalize()}")
+    st.markdown(f"**Nome:** {_name or '—'}")
+    st.markdown(f"**Role:** {_role.capitalize()}")
+    st.markdown(f"**Status:** {_status.capitalize()}")
 
 st.divider()
 
@@ -97,7 +102,7 @@ st.divider()
 st.html('<p class="ccu-section-title">👤 Dados do perfil</p>')
 
 with st.form("form_perfil"):
-    novo_nome = st.text_input("Nome completo", value=user.get("full_name", ""))
+    novo_nome = st.text_input("Nome completo", value=_name)
     salvar_nome = st.form_submit_button("💾 Atualizar nome", use_container_width=True, type="primary")
 
 if salvar_nome:

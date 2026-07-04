@@ -55,9 +55,9 @@ def _avatar_html(avatar_url: str | None, name: str, size: int = 52) -> str:
 
 if is_logged_in():
     user      = get_current_user()
-    role      = user.get("role", "client")
-    name      = user.get("full_name", "")
-    email_val = user.get("email", "")
+    role      = user.get("role") or "client"
+    name      = user.get("full_name") or ""
+    email_val = user.get("email") or ""
     avatar    = user.get("avatar_url") or st.session_state.get("user", {}).get("avatar_url")
     role_label = {"admin": "👑 Admin", "operator": "🔧 Operador",
                   "client": "👤 Cliente", "ai_developer": "🤖 Dev IA"}.get(role, role)
