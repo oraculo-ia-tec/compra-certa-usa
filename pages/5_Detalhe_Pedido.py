@@ -1,12 +1,12 @@
-"""AGENTE 3 - UI-SYSTEMS - Detalhe do Pedido."""
+"""Detalhe do Pedido."""
 import streamlit as st
 from tools.tools import tool_detalhar_pedido
+from components.ui import page_header, status_badge, section_title, user_topbar, STATUS_LABELS, TIPO_SERVICO_LABELS
+from components.session import require_auth
 
-st.title("Detalhe do Pedido")
-
-if not st.session_state.get("cliente_id"):
-    st.warning("Faca login na pagina de Onboarding para ver o detalhe do pedido.")
-    st.stop()
+require_auth()
+user_topbar()
+page_header("Detalhe do Pedido", "Informações completas sobre este pedido.", "📄")
 
 pedido_id_default = st.session_state.get("pedido_detalhe_id", 1)
 pedido_id = st.number_input("ID do pedido", min_value=1, value=int(pedido_id_default), step=1)
@@ -18,16 +18,13 @@ if not resultado.sucesso:
 
 d = resultado.dados
 
-status_labels = {
-    "aguardando_compra": "Aguardando compra", "aguardando_chegada_eua": "Aguardando chegada nos EUA",
-    "recebido_warehouse": "Recebido no warehouse", "em_consolidacao": "Em consolidacao",
-    "frete_cotado": "Frete cotado", "enviado": "Enviado", "em_transito": "Em transito",
-    "entregue": "Entregue", "cancelado": "Cancelado",
-}
-
-st.subheader(f"Pedido #{d['pedido_id']} — {status_labels.get(d['status'], d['status'])}")
+col_h1, col_h2 = st.columns([3, 1])
+with col_h1:
+    st.markdown(f"### Pedido #{d['pedido_id']}")
+with col_h2:
+    st.html(status_badge(d["status"]))
 c1, c2, c3 = st.columns(3)
-c1.metric("Tipo de servico", d["tipo_servico"].capitalize())
+c1.metric("Tipo de serviço", TIPO_SERVICO_LABELS.get(d["tipo_servico"], d["tipo_servico"]))
 c2.metric("Criado em", d["criado_em"])
 c3.metric("Qtd itens", len(d["itens"]))
 
@@ -35,7 +32,7 @@ if d["observacoes"]:
     st.caption(f"Observacoes: {d['observacoes']}")
 
 st.divider()
-st.subheader("Itens do pedido")
+section_title("Itens do pedido")
 if d["itens"]:
     for item in d["itens"]:
         with st.container(border=True):
@@ -47,7 +44,7 @@ else:
     st.info("Nenhum item cadastrado.")
 
 st.divider()
-st.subheader("Pacotes")
+section_title("Pacotes")
 if d["pacotes"]:
     for pac in d["pacotes"]:
         with st.container(border=True):

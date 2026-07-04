@@ -1,23 +1,16 @@
 """Tela de login — Compra Certa USA."""
 import streamlit as st
 from components.session import set_session, is_logged_in
+from components.ui import inject_css
 from services.auth import login, AuthError
 
 st.set_page_config(page_title="Login — Compra Certa USA", page_icon="🔐", layout="centered")
+inject_css()
 
-# Redireciona se já estiver logado
 if is_logged_in():
     st.switch_page("pages/4_Meus_Pedidos.py")
 
-st.markdown("""
-<style>
-.auth-title {font-size:1.8rem;font-weight:700;color:#1E3A8A;margin-bottom:.25rem;}
-.auth-sub   {color:#64748B;margin-bottom:1.5rem;font-size:.95rem;}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="auth-title">🔐 Entrar na conta</p>', unsafe_allow_html=True)
-st.markdown('<p class="auth-sub">Acesse seus pedidos e acompanhe suas importações</p>', unsafe_allow_html=True)
+st.html('<p class="ccu-page-title">🔐 Entrar na conta</p><p class="ccu-page-subtitle">Acesse seus pedidos e acompanhe suas importações</p><hr class="ccu-page-divider">')
 
 # Banner de conta confirmada com sucesso
 if st.session_state.pop("verified_success", False):

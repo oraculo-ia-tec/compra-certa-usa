@@ -1,12 +1,12 @@
-"""AGENTE 3 - UI-SYSTEMS - Orcamento do Pedido."""
+"""Orçamento do Pedido."""
 import streamlit as st
 from tools.tools import tool_calcular_orcamento, tool_sugerir_divisao_pacotes
+from components.ui import page_header, section_title, user_topbar
+from components.session import require_auth
 
-st.title("Orcamento do Pedido")
-
-if not st.session_state.get("cliente_id"):
-    st.warning("Faca login na pagina de Onboarding antes de consultar orcamento.")
-    st.stop()
+require_auth()
+user_topbar()
+page_header("Orçamento do Pedido", "Calcule o custo estimado da sua importação.", "💰")
 
 pedido_id_default = st.session_state.get("ultimo_pedido_id", 1)
 pedido_id = st.number_input("ID do pedido", min_value=1, value=int(pedido_id_default), step=1)
@@ -38,7 +38,7 @@ if st.button("Calcular orcamento", type="primary"):
         st.error(resultado.erro)
 
 st.divider()
-st.subheader("Sugestao de divisao de pacotes (perfil economico)")
+section_title("Sugestão de divisão de pacotes (perfil econômico)")
 if st.button("Sugerir divisao de pacotes"):
     resultado_div = tool_sugerir_divisao_pacotes(pedido_id=int(pedido_id))
     if resultado_div.sucesso:

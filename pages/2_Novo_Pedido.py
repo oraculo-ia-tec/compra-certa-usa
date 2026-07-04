@@ -1,17 +1,19 @@
-"""AGENTE 3 - UI-SYSTEMS - Novo Pedido."""
+"""Novo Pedido."""
 import streamlit as st
 from tools.tools import tool_criar_pedido
+from components.ui import page_header, section_title, user_topbar
+from components.session import require_auth, get_user_id
 
-st.title("Novo Pedido")
+require_auth()
+user_topbar()
+page_header("Novo Pedido", "Adicione os produtos que deseja importar dos EUA.", "🛒")
 
-if not st.session_state.get("cliente_id"):
-    st.warning("Faca login na pagina de Onboarding antes de criar um pedido.")
-    st.stop()
+cliente_id = get_user_id()
 
 if "itens_pedido" not in st.session_state:
     st.session_state.itens_pedido = []
 
-st.subheader("Adicionar item")
+section_title("Adicionar item")
 with st.form("form_item", clear_on_submit=True):
     col1, col2 = st.columns([3, 1])
     with col1:
@@ -35,7 +37,7 @@ with st.form("form_item", clear_on_submit=True):
             })
             st.success("Item adicionado.")
 
-st.subheader("Itens no pedido")
+section_title("Itens no pedido")
 if st.session_state.itens_pedido:
     for idx, item in enumerate(st.session_state.itens_pedido):
         c1, c2, c3 = st.columns([5, 2, 1])
@@ -52,13 +54,13 @@ if st.session_state.itens_pedido:
 else:
     st.info("Nenhum item adicionado ainda.")
 
-st.subheader("Configuracao do pedido")
+section_title("Configuração do pedido")
 tipo_servico = st.selectbox("Tipo de servico", options=["economico", "padrao", "expresso"],
                              format_func=lambda x: {"economico": "Economico", "padrao": "Padrao", "expresso": "Expresso"}[x])
 observacoes = st.text_area("Observacoes (opcional)")
 
 if st.button("Finalizar pedido", type="primary", disabled=not st.session_state.itens_pedido):
-    resultado = tool_criar_pedido(cliente_id=st.session_state.cliente_id, itens=st.session_state.itens_pedido,
+    resultado = tool_criar_pedido(cliente_id=cliente_id, itens=st.session_state.itens_pedido,
                                    tipo_servico=tipo_servico, observacoes=observacoes or None)
     if resultado.sucesso:
         st.session_state.ultimo_pedido_id = resultado.dados["pedido_id"]

@@ -1,23 +1,16 @@
 """Tela de confirmação de conta — Compra Certa USA."""
 import streamlit as st
 from components.session import is_logged_in
+from components.ui import inject_css
 from services.auth import confirm_account, resend_confirmation, AuthError
 
 st.set_page_config(page_title="Confirmar Conta — Compra Certa USA", page_icon="📧", layout="centered")
+inject_css()
 
-# Redireciona se já estiver logado
 if is_logged_in():
     st.switch_page("pages/4_Meus_Pedidos.py")
 
-st.markdown("""
-<style>
-.auth-title {font-size:1.8rem;font-weight:700;color:#1E3A8A;margin-bottom:.25rem;}
-.auth-sub   {color:#64748B;margin-bottom:1.5rem;font-size:.95rem;}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="auth-title">📧 Confirme sua conta</p>', unsafe_allow_html=True)
-st.markdown('<p class="auth-sub">Digite o código de 8 dígitos enviado para o seu e-mail</p>', unsafe_allow_html=True)
+st.html('<p class="ccu-page-title">📧 Confirme sua conta</p><p class="ccu-page-subtitle">Digite o código de 8 dígitos enviado para o seu e-mail</p><hr class="ccu-page-divider">')
 
 # E-mail pré-preenchido da sessão
 pending_email = st.session_state.get("pending_email", "")

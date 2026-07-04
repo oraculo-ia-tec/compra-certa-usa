@@ -1,25 +1,29 @@
-"""AGENTE 3 - UI-SYSTEMS - Rastreamento (visao do cliente)."""
+"""Rastreamento do Pedido."""
 import streamlit as st
 from tools.tools import tool_rastrear_pedido
+from components.ui import page_header, user_topbar, STATUS_LABELS
+from components.session import require_auth, get_user_id
 
-st.title("Rastreamento do Pedido")
-
-if not st.session_state.get("cliente_id"):
-    st.warning("Faca login na pagina de Onboarding para rastrear seu pedido.")
-    st.stop()
+require_auth()
+user_topbar()
+page_header("Rastreamento do Pedido", "Acompanhe sua encomenda em tempo real.", "✈️")
 
 etapas_labels = {
-    "aguardando_compra": "Pedido registrado", "aguardando_chegada_eua": "Aguardando chegada nos EUA",
-    "recebido_warehouse": "Recebido no warehouse EUA", "em_consolidacao": "Em consolidacao",
-    "frete_cotado": "Frete selecionado", "enviado": "Enviado para o Brasil",
-    "em_transito": "Em transito", "entregue": "Entregue",
+    "aguardando_compra":      "Pedido registrado",
+    "aguardando_chegada_eua": "Aguardando nos EUA",
+    "recebido_warehouse":     "Recebido no warehouse",
+    "em_consolidacao":        "Em consolidação",
+    "frete_cotado":           "Frete selecionado",
+    "enviado":                "Enviado ao Brasil",
+    "em_transito":            "Em trânsito",
+    "entregue":               "Entregue",
 }
 
 pedido_id_default = st.session_state.get("ultimo_pedido_id", 1)
 pedido_id = st.number_input("ID do pedido", min_value=1, value=int(pedido_id_default), step=1)
 
 if st.button("Rastrear", type="primary"):
-    resultado = tool_rastrear_pedido(int(pedido_id), st.session_state.cliente_id)
+    resultado = tool_rastrear_pedido(int(pedido_id), get_user_id())
     if not resultado.sucesso:
         st.error(resultado.erro)
         st.stop()

@@ -29,6 +29,11 @@ def get_current_user() -> dict:
     return st.session_state.get("user", {})
 
 
+def get_user_id() -> int | None:
+    """Retorna o ID do User autenticado (novo sistema JWT)."""
+    return get_current_user().get("id")
+
+
 def require_auth():
     """Bloqueia a página se o usuário não estiver autenticado E com conta ativa."""
     if not is_logged_in():

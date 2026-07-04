@@ -6,18 +6,13 @@ Fluxo em 2 passos:
 """
 import re
 import streamlit as st
+from components.ui import inject_css
 from services.auth import request_password_reset, reset_password, AuthError
 
 st.set_page_config(page_title="Redefinir Senha — Compra Certa USA", page_icon="🔑", layout="centered")
+inject_css()
 
-st.markdown("""
-<style>
-.auth-title {font-size:1.8rem;font-weight:700;color:#1E3A8A;margin-bottom:.25rem;}
-.auth-sub   {color:#64748B;margin-bottom:1.5rem;font-size:.95rem;}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="auth-title">🔑 Redefinir senha</p>', unsafe_allow_html=True)
+st.html('<p class="ccu-page-title">🔑 Redefinir senha</p><hr class="ccu-page-divider">')
 
 # Lê token da URL (quando usuário clica no link do e-mail)
 url_token = st.query_params.get("token", "")

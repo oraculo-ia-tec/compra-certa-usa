@@ -3,23 +3,16 @@ import re
 import base64
 import streamlit as st
 from components.session import is_logged_in
+from components.ui import inject_css
 from services.auth import register, AuthError
 
 st.set_page_config(page_title="Cadastro — Compra Certa USA", page_icon="📦", layout="centered")
+inject_css()
 
-# Redireciona se já estiver logado
 if is_logged_in():
     st.switch_page("pages/4_Meus_Pedidos.py")
 
-st.markdown("""
-<style>
-.auth-title  {font-size:1.8rem;font-weight:700;color:#1E3A8A;margin-bottom:.25rem;}
-.auth-sub    {color:#64748B;margin-bottom:1.5rem;font-size:.95rem;}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="auth-title">📦 Compra Certa USA</p>', unsafe_allow_html=True)
-st.markdown('<p class="auth-sub">Crie sua conta para começar a importar dos EUA</p>', unsafe_allow_html=True)
+st.html('<p class="ccu-page-title">📦 Compra Certa USA</p><p class="ccu-page-subtitle">Crie sua conta para começar a importar dos EUA</p><hr class="ccu-page-divider">')
 
 # Link para login
 col_l, col_r = st.columns([3, 1])

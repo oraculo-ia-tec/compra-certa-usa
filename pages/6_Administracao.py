@@ -1,12 +1,13 @@
-"""AGENTE 3 - UI-SYSTEMS - Painel de Administracao Operacional."""
+"""Painel de Administração Operacional."""
 import streamlit as st
 from tools.tools import (
     tool_listar_todos_pedidos, tool_atualizar_status_pedido, tool_registrar_chegada_warehouse,
     tool_cotar_frete, tool_listar_pacotes_sem_cotacao, tool_selecionar_cotacao_frete,
     tool_registrar_envio, tool_detalhar_pedido,
 )
+from components.ui import page_header, status_badge, STATUS_LABELS
 
-st.title("Administracao Operacional")
+page_header("Administração Operacional", "Gestão de pedidos, warehouse e fretes.", "⚙️")
 
 if "admin_autenticado" not in st.session_state:
     st.session_state.admin_autenticado = False
@@ -22,21 +23,14 @@ if not st.session_state.admin_autenticado:
             st.error("Senha incorreta.")
     st.stop()
 
-status_labels = {
-    "aguardando_compra": "Aguardando compra", "aguardando_chegada_eua": "Aguardando chegada nos EUA",
-    "recebido_warehouse": "Recebido no warehouse", "em_consolidacao": "Em consolidacao",
-    "frete_cotado": "Frete cotado", "enviado": "Enviado", "em_transito": "Em transito",
-    "entregue": "Entregue", "cancelado": "Cancelado",
-}
-
-tab_pedidos, tab_warehouse, tab_frete = st.tabs(["Visao geral de pedidos", "Chegada no warehouse", "Cotacao e envio de frete"])
+tab_pedidos, tab_warehouse, tab_frete = st.tabs(["📋 Visão geral", "📦 Chegada no warehouse", "✈️ Frete e envio"])
 
 with tab_pedidos:
     st.subheader("Todos os pedidos")
-    filtro_label = st.selectbox("Filtrar por status", options=["Todos"] + list(status_labels.values()))
+    filtro_label = st.selectbox("Filtrar por status", options=["Todos"] + list(STATUS_LABELS.values()))
     filtro_status = None
     if filtro_label != "Todos":
-        filtro_status = [k for k, v in status_labels.items() if v == filtro_label][0]
+        filtro_status = [k for k, v in STATUS_LABELS.items() if v == filtro_label][0]
 
     resultado = tool_listar_todos_pedidos(filtro_status)
     if resultado.sucesso:
@@ -50,16 +44,16 @@ with tab_pedidos:
                     st.write(f"**Pedido #{p['pedido_id']}** — {p['cliente_nome']} ({p['cliente_email']})")
                     st.caption(f"Criado em {p['criado_em']} | Servico: {p['tipo_servico'].capitalize()}")
                 with c2:
-                    st.write(f"Status atual: **{status_labels.get(p['status'], p['status'])}**")
-                    st.caption(f"{p['qtd_itens']} item(ns) | {p['qtd_pacotes']} pacote(s)")
+                    st.html(status_badge(p["status"]))
+                    st.caption(f"{p['qtd_itens']} item(ns) · {p['qtd_pacotes']} pacote(s)")
                 with c3:
                     novo_status_label = st.selectbox(
-                        "Novo status", options=list(status_labels.values()),
-                        index=list(status_labels.keys()).index(p["status"]),
+                        "Novo status", options=list(STATUS_LABELS.values()),
+                        index=list(STATUS_LABELS.keys()).index(p["status"]),
                         key=f"status_select_{p['pedido_id']}",
                     )
-                    if st.button("Atualizar status", key=f"btn_status_{p['pedido_id']}"):
-                        novo_status_key = [k for k, v in status_labels.items() if v == novo_status_label][0]
+                    if st.button("Atualizar status", key=f"btn_status_{p['pedido_id']}", use_container_width=True):
+                        novo_status_key = [k for k, v in STATUS_LABELS.items() if v == novo_status_label][0]
                         r = tool_atualizar_status_pedido(p["pedido_id"], novo_status_key)
                         if r.sucesso:
                             st.success("Status atualizado.")
@@ -70,7 +64,7 @@ with tab_pedidos:
         st.error(resultado.erro)
 
 with tab_warehouse:
-    st.subheader("Registrar chegada de pacote no warehouse EUA")
+    st.subheader("Registrar chegada no warehouse EUA")
     with st.form("form_chegada_warehouse"):
         pedido_id_wh = st.number_input("ID do pedido", min_value=1, step=1)
         codigo_rastreio_eua = st.text_input("Codigo de rastreio EUA (opcional)")
