@@ -72,7 +72,7 @@ else:
 if "assistant_messages" not in st.session_state:
     st.session_state["assistant_messages"] = []
 
-# ── Sugestões rápidas ─────────────────────────────────────────────────────────
+# ── Sugestões rápidas (só aparecem com histórico vazio) ─────────────────────
 if not st.session_state["assistant_messages"]:
     st.markdown("**Perguntas frequentes — clique para começar:**")
     sugestoes = [
@@ -85,7 +85,7 @@ if not st.session_state["assistant_messages"]:
     for i, s in enumerate(sugestoes):
         with cols[i % 2]:
             if st.button(s, use_container_width=True, key=f"sugestao_{i}"):
-                st.session_state["assistant_messages"].append({"role": "user", "content": s})
+                st.session_state["pending_question"] = s
                 st.rerun()
 
 st.divider()
@@ -95,11 +95,14 @@ for msg in st.session_state["assistant_messages"]:
     with st.chat_message(msg["role"], avatar="🧑" if msg["role"] == "user" else "🤖"):
         st.markdown(msg["content"])
 
-# ── Input do usuário ──────────────────────────────────────────────────────────
-if prompt := st.chat_input("Digite sua dúvida sobre compras, taxas ou pedidos..."):
-    st.session_state["assistant_messages"].append({"role": "user", "content": prompt})
+# ── Captura entrada: botão de sugestão OU chat_input ─────────────────────────
+pending_q  = st.session_state.pop("pending_question", None)
+user_input = pending_q or st.chat_input("Digite sua dúvida sobre compras, taxas ou pedidos...")
+
+if user_input:
+    st.session_state["assistant_messages"].append({"role": "user", "content": user_input})
     with st.chat_message("user", avatar="🧑"):
-        st.markdown(prompt)
+        st.markdown(user_input)
 
     with st.chat_message("assistant", avatar="🤖"):
         with st.spinner("Analisando..."):
