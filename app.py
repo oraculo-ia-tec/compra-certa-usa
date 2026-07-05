@@ -4,9 +4,22 @@ Usa st.navigation(position="hidden") + st.page_link() para controle total
 da ordem da sidebar: logo → card → menu → divider → botões.
 """
 from PIL import Image
+import base64
 import streamlit as st
 from models.seed import init_db_and_seed
 from components.session import is_logged_in, get_current_user, clear_session
+
+
+def _load_b64(path: str) -> str:
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+
+_LOGO_B64 = _load_b64("assets/logo.png")
+_ICON_B64 = _load_b64("assets/icon.png")
 
 _favicon = Image.open("assets/icon.png")
 
@@ -56,55 +69,35 @@ def _avatar_html(avatar_url, name, size=52):
 
 
 def _sidebar_logo():
-    """Logomarca oficial com borda redonda e animação neon pulsante."""
-    st.html("""
+    """Logomarca oficial com borda redonda e animação neon pulsante (base64)."""
+    st.html(f"""
     <style>
-    @keyframes neon-pulse {
-        0%   { box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }
-        50%  { box-shadow: 0 0 14px #60A5FA, 0 0 32px #3B82F6, 0 0 56px #1E3A8A; }
-        100% { box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }
-    }
-    .ccu-logo-wrapper {
-        display: flex;
-        justify-content: center;
-        padding: 18px 0 10px;
-    }
-    .ccu-logo-circle {
-        width: 90px;
-        height: 90px;
+    @keyframes neon-pulse {{
+        0%   {{ box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }}
+        50%  {{ box-shadow: 0 0 16px #60A5FA, 0 0 36px #3B82F6, 0 0 60px #1E3A8A; }}
+        100% {{ box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }}
+    }}
+    .ccu-logo-circle {{
+        width: 90px; height: 90px;
         border-radius: 50%;
         border: 3px solid #3B82F6;
         overflow: hidden;
         animation: neon-pulse 2.4s ease-in-out infinite;
         background: #fff;
-    }
-    .ccu-logo-circle img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .ccu-logo-title {
-        text-align: center;
-        font-weight: 800;
-        font-size: .92rem;
-        color: #1E3A8A;
-        letter-spacing: .8px;
-        margin: 8px 0 2px;
-    }
-    .ccu-logo-sub {
-        text-align: center;
-        font-size: .67rem;
-        color: #94A3B8;
-        margin: 0 0 10px;
-    }
+        margin: 0 auto;
+    }}
+    .ccu-logo-circle img {{
+        width: 100%; height: 100%; object-fit: cover;
+    }}
     </style>
-    <div class="ccu-logo-wrapper">
+    <div style="padding:18px 0 10px;text-align:center;">
       <div class="ccu-logo-circle">
-        <img src="app/static/logo.png" alt="Compra Certa USA">
+        <img src="data:image/png;base64,{_LOGO_B64}" alt="Compra Certa USA">
       </div>
+      <p style="margin:8px 0 2px;font-weight:800;font-size:.92rem;
+                color:#1E3A8A;letter-spacing:.8px;">COMPRA CERTA USA</p>
+      <p style="margin:0 0 10px;font-size:.67rem;color:#94A3B8;">Importações dos EUA para o Brasil</p>
     </div>
-    <p class="ccu-logo-title">COMPRA CERTA USA</p>
-    <p class="ccu-logo-sub">Importações dos EUA para o Brasil</p>
     """)
 
 
@@ -154,7 +147,17 @@ if is_logged_in():
         """)
 
         _section_label("Menu")
-        st.page_link(assistente_page, label="Assistente IA",     icon="🤖")
+        # Assistente IA — ícone oficial
+        col_ico, col_lnk = st.columns([1, 8])
+        with col_ico:
+            st.html(
+                f'<div style="display:flex;align-items:center;justify-content:center;'
+                f'height:100%;padding-top:5px;">'
+                f'<img src="data:image/png;base64,{_ICON_B64}" '
+                f'style="width:22px;height:22px;border-radius:5px;"></div>'
+            )
+        with col_lnk:
+            st.page_link(assistente_page, label="Assistente IA")
         st.page_link(home_page,        label="Início",            icon="🏠")
         st.page_link(pedido_page,      label="Novo Pedido",       icon="🛒")
         st.page_link(orcamento_page,   label="Orçamento",         icon="💰")
@@ -190,7 +193,16 @@ else:
     with st.sidebar:
         _sidebar_logo()
         _section_label("Assistente")
-        st.page_link(assistente_pub, label="Assistente IA", icon="🤖")
+        col_ico2, col_lnk2 = st.columns([1, 8])
+        with col_ico2:
+            st.html(
+                f'<div style="display:flex;align-items:center;justify-content:center;'
+                f'height:100%;padding-top:5px;">'
+                f'<img src="data:image/png;base64,{_ICON_B64}" '
+                f'style="width:22px;height:22px;border-radius:5px;"></div>'
+            )
+        with col_lnk2:
+            st.page_link(assistente_pub, label="Assistente IA")
         _section_label("Acesso")
         st.page_link(login_page,    label="Login",           icon="🔐")
         st.page_link(cadastro_page, label="Cadastro",        icon="📝")
