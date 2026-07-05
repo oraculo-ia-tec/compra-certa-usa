@@ -73,28 +73,40 @@ def _sidebar_logo():
     st.html(f"""
     <style>
     @keyframes neon-pulse {{
-        0%   {{ box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }}
-        50%  {{ box-shadow: 0 0 16px #60A5FA, 0 0 36px #3B82F6, 0 0 60px #1E3A8A; }}
-        100% {{ box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }}
+        0%   {{ box-shadow: 0 0  8px #3B82F6, 0 0 18px #3B82F6, 0 0 34px #1E3A8A; }}
+        50%  {{ box-shadow: 0 0 20px #60A5FA, 0 0 42px #3B82F6, 0 0 70px #1E3A8A; }}
+        100% {{ box-shadow: 0 0  8px #3B82F6, 0 0 18px #3B82F6, 0 0 34px #1E3A8A; }}
     }}
-    .ccu-logo-circle {{
-        width: 90px; height: 90px;
+    /* Camada EXTERNA: borda + animação neon (sem overflow hidden para o glow não ser cortado) */
+    .ccu-logo-outer {{
+        width: 94px; height: 94px;
         border-radius: 50%;
         border: 3px solid #3B82F6;
-        overflow: hidden;
         animation: neon-pulse 2.4s ease-in-out infinite;
-        background: #fff;
         margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        padding: 3px;
     }}
-    .ccu-logo-circle img {{
-        width: 100%; height: 100%; object-fit: cover;
+    /* Camada INTERNA: clipar a imagem em círculo */
+    .ccu-logo-inner {{
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        overflow: hidden;
+    }}
+    .ccu-logo-inner img {{
+        width: 100%; height: 100%; object-fit: cover; display: block;
     }}
     </style>
     <div style="padding:18px 0 10px;text-align:center;">
-      <div class="ccu-logo-circle">
-        <img src="data:image/png;base64,{_LOGO_B64}" alt="Compra Certa USA">
+      <div class="ccu-logo-outer">
+        <div class="ccu-logo-inner">
+          <img src="data:image/png;base64,{_LOGO_B64}" alt="Compra Certa USA">
+        </div>
       </div>
-      <p style="margin:8px 0 2px;font-weight:800;font-size:.92rem;
+      <p style="margin:10px 0 2px;font-weight:800;font-size:.92rem;
                 color:#1E3A8A;letter-spacing:.8px;">COMPRA CERTA USA</p>
       <p style="margin:0 0 10px;font-size:.67rem;color:#94A3B8;">Importações dos EUA para o Brasil</p>
     </div>
