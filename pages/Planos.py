@@ -20,9 +20,9 @@ if session_id:
     with st.spinner("Verificando pagamento..."):
         resultado = verify_checkout_session(session_id)
     if resultado and resultado.get("paid"):
-        plano = resultado["plano"]
+        plano   = resultado["plano"]
         user_id = resultado["user_id"]
-        activate_subscription(user_id, plano)
+        activate_subscription(user_id, plano, extra=resultado)
         # Atualiza sessão se for o usuário atual
         if is_logged_in() and get_user_id() == user_id:
             st.session_state["user"]["subscription_active"] = True
