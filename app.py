@@ -128,6 +128,27 @@ if is_logged_in():
 
     pg = st.navigation(pages_map, position="hidden")
 
+    # CSS: esconde emoji padrão do page_link dentro de coluna e aperta gap
+    st.markdown(f"""
+    <style>
+    section[data-testid="stSidebar"] .stColumn [data-testid="stPageLink"] a > :first-child {{
+        display: none !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) {{
+        gap: 2px !important;
+        margin: -2px 0 !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) .stColumn:first-child {{
+        display: flex !important;
+        align-items: center !important;
+        padding-right: 0 !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) .stColumn:last-child {{
+        padding-left: 0 !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
     with st.sidebar:
         _sidebar_logo()
 
@@ -147,14 +168,12 @@ if is_logged_in():
         """)
 
         _section_label("Menu")
-        # Assistente IA — ícone oficial
+        # Assistente IA — ícone oficial CCU substituindo o emoji
         col_ico, col_lnk = st.columns([1, 8])
         with col_ico:
             st.html(
-                f'<div style="display:flex;align-items:center;justify-content:center;'
-                f'height:100%;padding-top:5px;">'
                 f'<img src="data:image/png;base64,{_ICON_B64}" '
-                f'style="width:22px;height:22px;border-radius:5px;"></div>'
+                f'style="width:22px;height:22px;border-radius:5px;display:block;margin:auto;">'
             )
         with col_lnk:
             st.page_link(assistente_page, label="Assistente IA")
@@ -190,16 +209,35 @@ else:
     }
     pg = st.navigation(pages_map, position="hidden")
 
+    # mesmo CSS para sidebar pública
+    st.markdown(f"""
+    <style>
+    section[data-testid="stSidebar"] .stColumn [data-testid="stPageLink"] a > :first-child {{
+        display: none !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) {{
+        gap: 2px !important;
+        margin: -2px 0 !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) .stColumn:first-child {{
+        display: flex !important;
+        align-items: center !important;
+        padding-right: 0 !important;
+    }}
+    section[data-testid="stSidebar"] .stHorizontalBlock:has([data-testid="stPageLink"]) .stColumn:last-child {{
+        padding-left: 0 !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
     with st.sidebar:
         _sidebar_logo()
         _section_label("Assistente")
         col_ico2, col_lnk2 = st.columns([1, 8])
         with col_ico2:
             st.html(
-                f'<div style="display:flex;align-items:center;justify-content:center;'
-                f'height:100%;padding-top:5px;">'
                 f'<img src="data:image/png;base64,{_ICON_B64}" '
-                f'style="width:22px;height:22px;border-radius:5px;"></div>'
+                f'style="width:22px;height:22px;border-radius:5px;display:block;margin:auto;">'
             )
         with col_lnk2:
             st.page_link(assistente_pub, label="Assistente IA")
