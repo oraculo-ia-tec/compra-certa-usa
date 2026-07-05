@@ -442,12 +442,26 @@ def chat(
     }
     conversation = [system] + messages
 
+    # ── Detecta saudação simples na 1ª mensagem → bloqueia tools ─────────────
+    _PURCHASE_KEYWORDS = {
+        "plano", "assinar", "assinatura", "preço", "preco", "quanto", "custa",
+        "contratar", "cadastrar", "começar", "comecar", "starter", "pro", "premium",
+        "valor", "mensalidade", "quero", "comprar", "importar", "frete",
+    }
+    _first_content = (messages[0]["content"] if messages else "").lower().strip()
+    _is_greeting_only = (
+        len(messages) == 1
+        and len(_first_content) < 50
+        and not any(kw in _first_content for kw in _PURCHASE_KEYWORDS)
+    )
+    _tool_choice = "none" if _is_greeting_only else "auto"
+
     # ── Primeira chamada — o modelo pode pedir ferramentas ─────────────────────
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=conversation,
         tools=TOOLS,
-        tool_choice="auto",
+        tool_choice=_tool_choice,
         max_tokens=2048,
         temperature=0.3,
     )
