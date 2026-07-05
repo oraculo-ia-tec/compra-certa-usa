@@ -1,11 +1,15 @@
 """Assistente IA — Compra Certa USA."""
 import base64
+from PIL import Image
 import streamlit as st
 from components.ui import inject_css
 from components.session import is_logged_in, get_current_user, get_user_id
 from services.assistant import chat
 
 inject_css()
+
+# Ícone CCU como avatar do assistente
+_ICON_AVATAR = Image.open("assets/icon.png")
 
 # ── Cabeçalho: ícone centralizado com animação pulse ─────────────────────────
 def _load_b64(path: str) -> str:
@@ -92,7 +96,8 @@ st.divider()
 
 # ── Exibe histórico de mensagens ──────────────────────────────────────────────
 for msg in st.session_state["assistant_messages"]:
-    with st.chat_message(msg["role"], avatar="🧑" if msg["role"] == "user" else "🤖"):
+    avatar = "🧑" if msg["role"] == "user" else _ICON_AVATAR
+    with st.chat_message(msg["role"], avatar=avatar):
         st.markdown(msg["content"])
 
 # ── Captura entrada: botão de sugestão OU chat_input ─────────────────────────
@@ -104,7 +109,7 @@ if user_input:
     with st.chat_message("user", avatar="🧑"):
         st.markdown(user_input)
 
-    with st.chat_message("assistant", avatar="🤖"):
+    with st.chat_message("assistant", avatar=_ICON_AVATAR):
         with st.spinner("Analisando..."):
             resposta = chat(
                 messages=st.session_state["assistant_messages"],
