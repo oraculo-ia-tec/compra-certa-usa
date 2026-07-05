@@ -27,13 +27,13 @@ st.html(f"""
 .ccu-chat-icon-outer {{
     width: 180px; height: 180px;
     border-radius: 50%;
-    border: 3px solid #3B82F6;
+    border: none;
     margin: 0 auto 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #fff;
-    padding: 5px;
+    padding: 0;
 }}
 .ccu-chat-icon-inner {{
     width: 100%; height: 100%;
