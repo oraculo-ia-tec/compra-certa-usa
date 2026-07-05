@@ -1,4 +1,5 @@
 """Assistente IA — Compra Certa USA."""
+import base64
 import streamlit as st
 from components.ui import inject_css
 from components.session import is_logged_in, get_current_user, get_user_id
@@ -6,13 +7,56 @@ from services.assistant import chat
 
 inject_css()
 
-# ── Cabeçalho com ícone oficial ────────────────────────────────────────────────
-col_icon, col_title = st.columns([1, 8])
-with col_icon:
-    st.image("assets/icon.png", use_container_width=True)
-with col_title:
-    st.markdown("## Assistente Compra Certa USA")
-    st.caption("Tire dúvidas sobre compras, taxas e seus pedidos")
+# ── Cabeçalho: ícone centralizado com animação pulse ─────────────────────────
+def _load_b64(path: str) -> str:
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
+_ICON_B64 = _load_b64("assets/icon.png")
+
+st.html(f"""
+<style>
+@keyframes chat-icon-pulse {{
+    0%   {{ transform: scale(1.00); opacity: 1; }}
+    50%  {{ transform: scale(1.06); opacity: 0.88; }}
+    100% {{ transform: scale(1.00); opacity: 1; }}
+}}
+.ccu-chat-icon-outer {{
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: 3px solid #3B82F6;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 4px;
+}}
+.ccu-chat-icon-inner {{
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+}}
+.ccu-chat-icon-inner img {{
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: chat-icon-pulse 2.4s ease-in-out infinite;
+    transform-origin: center center;
+}}
+</style>
+<div style="text-align:center;padding:24px 0 8px;">
+  <div class="ccu-chat-icon-outer">
+    <div class="ccu-chat-icon-inner">
+      <img src="data:image/png;base64,{_ICON_B64}" alt="Compra Certa USA">
+    </div>
+  </div>
+  <p style="margin:0;font-size:.85rem;color:#64748B;">Tire dúvidas sobre compras, taxas e seus pedidos</p>
+</div>
+""")
 st.divider()
 
 # ── Contexto do usuário ────────────────────────────────────────────────────────
