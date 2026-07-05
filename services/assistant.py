@@ -85,6 +85,33 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "mostrar_widget_planos",
+            "description": (
+                "Exibe os cards interativos de planos de assinatura da Compra Certa USA. "
+                "Use quando o usuário demonstrar interesse em: contratar, assinar, ver preços, "
+                "quanto custa, quero ser cliente, como me cadastro, planos disponíveis, "
+                "ou qualquer intenção de compra/assinatura."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "plano_sugerido": {
+                        "type": "string",
+                        "enum": ["starter", "pro", "premium", "nenhum"],
+                        "description": "Plano mais adequado ao perfil/contexto do usuário. Use 'pro' se incerto.",
+                    },
+                    "motivo": {
+                        "type": "string",
+                        "description": "Breve justificativa da sugestão de plano.",
+                    },
+                },
+                "required": ["plano_sugerido"],
+            },
+        },
+    },
 ]
 
 # ── ICMS por estado (alíquota padrão para importação) ─────────────────────────
@@ -201,6 +228,32 @@ def _exec_informacoes_servico(tipo: str) -> str:
     return json.dumps({tipo: info}, ensure_ascii=False)
 
 
+def _exec_mostrar_planos(plano_sugerido: str, motivo: str) -> str:
+    """Sinaliza ao frontend que deve exibir o widget de planos."""
+    try:
+        st.session_state["flow_state"]     = "mostrar_planos"
+        st.session_state["plano_sugerido"] = plano_sugerido if plano_sugerido != "nenhum" else "pro"
+    except Exception:
+        pass
+
+    from services.stripe_service import PLANOS
+    resumo = {
+        slug: {
+            "nome":      p["nome"],
+            "preco_brl": p["preco_brl"],
+            "pedidos":   p["pedidos"],
+            "fretes":    p["fretes"],
+        }
+        for slug, p in PLANOS.items()
+    }
+    return json.dumps({
+        "widget_exibido":  True,
+        "plano_sugerido":  plano_sugerido,
+        "motivo":          motivo,
+        "planos_disponiveis": resumo,
+    }, ensure_ascii=False)
+
+
 def _run_tool(name: str, args: dict, user_id: int | None) -> str:
     if name == "consultar_meus_pedidos":
         return _exec_consultar_meus_pedidos(user_id)
@@ -214,6 +267,11 @@ def _run_tool(name: str, args: dict, user_id: int | None) -> str:
         )
     if name == "informacoes_servico":
         return _exec_informacoes_servico(args.get("tipo", "todos"))
+    if name == "mostrar_widget_planos":
+        return _exec_mostrar_planos(
+            args.get("plano_sugerido", "pro"),
+            args.get("motivo", ""),
+        )
     return json.dumps({"erro": f"Ferramenta '{name}' não reconhecida."})
 
 
@@ -263,6 +321,20 @@ Você tem acesso a ferramentas para:
 - Consultar pedidos do cliente autenticado
 - Calcular estimativas de impostos
 - Informar sobre tipos de serviço
+- **Exibir widget interativo de planos de assinatura**
+
+## Análise de intenção — planos de assinatura
+Use a ferramenta `mostrar_widget_planos` SEMPRE que o usuário expressar:
+- Interesse em contratar, assinar, tornar-se cliente
+- Perguntas sobre preço, valor, quanto custa, planos disponíveis
+- Frases como "quero me cadastrar", "como funciona a assinatura", "vale a pena?"
+- Comparação de planos ou pergunta sobre benefícios
+- Qualquer sentimento positivo de compra ("adorei", "quero começar", "vou contratar")
+
+### Sugestão de plano por perfil
+- **Starter** (R$29,90): usuário com poucas compras ou quer testar o serviço
+- **Pro** (R$59,90): usuário regular, até 10 pedidos/mês — **use como padrão se incerto**
+- **Premium** (R$99,90): usuário frequente, quer expresso ou volume alto
 
 ## Regras de comportamento
 - Seja objetivo, cordial e profissional

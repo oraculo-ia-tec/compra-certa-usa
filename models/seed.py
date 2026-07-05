@@ -38,6 +38,7 @@ _MIGRATIONS_USERS = [
     ("avatar_url",                   "TEXT"),
     ("is_first_access",              "BOOLEAN DEFAULT 1"),
     ("subscription_active",          "BOOLEAN DEFAULT 0"),
+    ("subscription_plan",             "VARCHAR(20)"),
     ("last_login_at",                "DATETIME"),
     ("last_login_ip",                "VARCHAR(45)"),
     ("role",                         "VARCHAR(50) DEFAULT 'client'"),

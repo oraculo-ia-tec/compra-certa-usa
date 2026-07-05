@@ -49,6 +49,7 @@ meus_page       = st.Page("pages/4_Meus_Pedidos.py",   title="Meus Pedidos",    
 detalhe_page    = st.Page("pages/5_Detalhe_Pedido.py", title="Detalhe do Pedido", icon="📄")
 rastreio_page   = st.Page("pages/7_Rastreamento.py",   title="Rastreamento",      icon="✈️")
 config_page     = st.Page("pages/Configuracao.py",     title="Configuração",      icon="⚙️")
+planos_page     = st.Page("pages/Planos.py",           title="Planos",            icon="💳")
 admin_page      = st.Page("pages/6_Administracao.py",  title="Administração",     icon="🔧")
 
 
@@ -134,7 +135,7 @@ if is_logged_in():
     pages_map = {
         "Menu":  [assistente_page, home_page, pedido_page, orcamento_page,
                   meus_page, detalhe_page, rastreio_page],
-        "Conta": [config_page],
+        "Conta": [config_page, planos_page],
     }
     if role in ("admin", "operator", "ai_developer"):
         pages_map["Gestão"] = [admin_page]
