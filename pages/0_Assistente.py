@@ -198,7 +198,9 @@ def render_plans_widget():
                 btn_label = f"Fazer upgrade para {plano['nome']}" if is_upgrade else f"Assinar {plano['nome']}"
                 if st.button(btn_label, use_container_width=True, key=f"btn_plano_{slug}", type="primary"):
                     if not is_logged_in():
-                        st.warning("⚠️ Faça login para assinar.")
+                        # Salva plano escolhido e redireciona para cadastro
+                        st.session_state["pending_plan"] = slug
+                        st.switch_page("pages/Cadastro.py")
                     elif not stripe_configurado():
                         st.error("⚠️ Stripe não configurado. Adicione STRIPE_API_KEY nos Secrets.")
                     else:

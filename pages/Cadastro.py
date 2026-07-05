@@ -11,6 +11,13 @@ inject_css()
 if is_logged_in():
     st.switch_page("pages/4_Meus_Pedidos.py")
 
+# Banner quando veio da seleção de plano
+_pending_plan = st.session_state.get("pending_plan")
+if _pending_plan:
+    from services.stripe_service import PLANOS
+    _nome_plano = PLANOS.get(_pending_plan, {}).get("nome", _pending_plan.capitalize())
+    st.info(f"💳 Você escolheu o plano **{_nome_plano}**! Crie sua conta para continuar com o pagamento.")
+
 st.html('<p class="ccu-page-title">📦 Compra Certa USA</p><p class="ccu-page-subtitle">Crie sua conta para começar a importar dos EUA</p><hr class="ccu-page-divider">')
 
 # Link para login
