@@ -65,12 +65,15 @@ st.html(f"""
 """)
 st.divider()
 
-# ── Contexto do usuário ────────────────────────────────────────────────────────
+# ── Contexto de assinatura do usuário logado ────────────────────────────────
 user_id   = get_user_id() if is_logged_in() else None
 user_name = get_current_user().get("full_name") if is_logged_in() else None
+_user_ctx = get_current_user() if is_logged_in() else {}
+sub_active = bool(_user_ctx.get("subscription_active"))
+sub_plan   = _user_ctx.get("subscription_plan")
 
 if is_logged_in():
-    st.caption(f"👤 Logado como **{user_name}** — posso consultar seus pedidos diretamente.")
+    st.caption(f"👤 Logado como **{user_name}**" + (f" — Plano **{sub_plan.capitalize()}**" if sub_plan else "") + " — posso consultar seus pedidos.")
 else:
     st.info("💡 Faça login para que eu possa consultar seus pedidos e dar respostas personalizadas.")
 
@@ -117,34 +120,69 @@ if user_input:
                 messages=st.session_state["assistant_messages"],
                 user_id=user_id,
                 user_name=user_name,
+                subscription_active=sub_active,
+                subscription_plan=sub_plan,
             )
         st.markdown(resposta)
 
     st.session_state["assistant_messages"].append({"role": "assistant", "content": resposta})
 
-# ── Widget de planos (ativado quando LLM detecta intenção de assinatura) ──────
+# ── Widget de planos (ativado pelo LLM) ───────────────────────────────────────
 def render_plans_widget():
-    if st.session_state.get("flow_state") != "mostrar_planos":
+    flow = st.session_state.get("flow_state")
+    if flow not in ("mostrar_planos", "upgrade_premium", "upgrade_pro"):
         return
 
     plano_sugerido = st.session_state.get("plano_sugerido", "pro")
+    is_upgrade = flow in ("upgrade_premium", "upgrade_pro")
+
+    if flow == "upgrade_premium":
+        planos_exibir = {"premium": PLANOS["premium"]}
+    elif flow == "upgrade_pro":
+        planos_exibir = {"pro": PLANOS["pro"]}
+    else:
+        planos_exibir = PLANOS
 
     with st.container(border=True):
-        st.markdown("### 📦 Planos de Assinatura — Compra Certa USA")
-        st.caption("Escolha o plano ideal para suas importações e pague com cartão")
+        if flow == "upgrade_premium":
+            st.markdown("### ⬆️ Upgrade: Pro → Premium")
+            st.html("""
+            <div style="display:flex;gap:12px;margin-bottom:12px;">
+              <div style="flex:1;background:#F1F5F9;border-radius:8px;padding:12px;">
+                <p style="margin:0;font-weight:700;color:#64748B;">Seu plano atual — Pro</p>
+                <p style="margin:4px 0 0;font-size:.85rem;color:#64748B;">
+                  10 pedidos/mês · Econômico + Padrão<br>R$ 59,90/mês
+                </p>
+              </div>
+              <div style="display:flex;align-items:center;font-size:1.5rem;">→</div>
+              <div style="flex:1;background:#EFF6FF;border:2px solid #D97706;border-radius:8px;padding:12px;">
+                <p style="margin:0;font-weight:700;color:#D97706;">👑 Premium</p>
+                <p style="margin:4px 0 0;font-size:.85rem;color:#475569;">
+                  Pedidos ilimitados · + Expresso (5-10 dias)<br>R$ 99,90/mês
+                </p>
+              </div>
+            </div>
+            """)
+        elif flow == "upgrade_pro":
+            st.markdown("### ⬆️ Upgrade: Starter → Pro")
+        else:
+            st.markdown("### 📦 Planos de Assinatura — Compra Certa USA")
+            st.caption("Escolha o plano ideal para suas importações")
 
-        cols = st.columns(3)
-        for i, (slug, plano) in enumerate(PLANOS.items()):
-            destaque = plano.get("destaque", False) or slug == plano_sugerido
+        ncols = max(len(planos_exibir), 1)
+        cols  = st.columns(ncols) if ncols > 1 else st.columns([1, 2, 1])
+        col_list = [cols[1]] if ncols == 1 else cols
+
+        for i, (slug, plano) in enumerate(planos_exibir.items()):
+            destaque = True if is_upgrade else (plano.get("destaque", False) or slug == plano_sugerido)
             cor   = plano["cor"]
             borda = cor if destaque else "#E2E8F0"
             fundo = "#EFF6FF" if destaque else "#F8FAFC"
 
-            with cols[i]:
+            with col_list[i]:
                 st.html(f"""
                 <div style="border:2px solid {borda};border-radius:12px;
-                            padding:18px 12px;background:{fundo};text-align:center;
-                            margin-bottom:4px;">
+                            padding:18px 12px;background:{fundo};text-align:center;margin-bottom:4px;">
                   <div style="font-size:2rem;">{plano['emoji']}</div>
                   <p style="margin:6px 0 2px;font-weight:800;font-size:1.05rem;color:{cor};">
                     {plano['nome']}
@@ -153,42 +191,26 @@ def render_plans_widget():
                     R$ {plano['preco_brl']:.2f}
                     <span style="font-size:.75rem;font-weight:400;color:#64748B;">/mês</span>
                   </p>
-                  <p style="margin:6px 0 4px;font-size:.8rem;color:#475569;">
-                    {plano['pedidos']}
-                  </p>
-                  <p style="margin:0;font-size:.72rem;color:#94A3B8;">
-                    {" · ".join(plano['fretes'])}
-                  </p>
-                  {"<div style='background:#1E3A8A;color:#fff;border-radius:4px;padding:2px 10px;font-size:.68rem;font-weight:600;margin-top:8px;display:inline-block;'>✨ Recomendado</div>" if destaque else ""}
+                  <p style="margin:6px 0 4px;font-size:.8rem;color:#475569;">{plano['pedidos']}</p>
+                  <p style="margin:0;font-size:.72rem;color:#94A3B8;">{" · ".join(plano['fretes'])}</p>
                 </div>
                 """)
-
-                btn_type = "primary" if destaque else "secondary"
-                if st.button(
-                    f"Assinar {plano['nome']}",
-                    use_container_width=True,
-                    key=f"btn_plano_{slug}",
-                    type=btn_type,
-                ):
+                btn_label = f"Fazer upgrade para {plano['nome']}" if is_upgrade else f"Assinar {plano['nome']}"
+                if st.button(btn_label, use_container_width=True, key=f"btn_plano_{slug}", type="primary"):
                     if not is_logged_in():
-                        st.warning("⚠️ Faça login para assinar um plano.")
+                        st.warning("⚠️ Faça login para assinar.")
                     elif not stripe_configurado():
                         st.error("⚠️ Stripe não configurado. Adicione STRIPE_API_KEY nos Secrets.")
                     else:
                         user = get_current_user()
                         checkout_url = create_checkout_session(
-                            plano=slug,
-                            user_email=user.get("email", ""),
-                            user_id=get_user_id() or 0,
+                            plano=slug, user_email=user.get("email", ""), user_id=get_user_id() or 0,
                         )
                         if checkout_url:
                             st.session_state["flow_state"] = None
-                            components.html(
-                                f'<script>window.top.location.href="{checkout_url}";</script>',
-                                height=0,
-                            )
+                            components.html(f'<script>window.top.location.href="{checkout_url}";</script>', height=0)
                         else:
-                            st.error("Erro ao criar sessão de pagamento. Tente novamente.")
+                            st.error("Erro ao criar sessão de pagamento.")
 
         st.divider()
         if st.button("✕ Fechar", key="fechar_widget_planos"):
@@ -196,6 +218,13 @@ def render_plans_widget():
             st.rerun()
 
 render_plans_widget()
+
+# ── Rodapé com botão de limpar ────────────────────────────────────────────────
+if st.session_state["assistant_messages"]:
+    if st.button("🗑️ Limpar conversa", use_container_width=False):
+        st.session_state["assistant_messages"] = []
+        st.session_state["flow_state"] = None
+        st.rerun()
 
 # ── Rodapé com botão de limpar ────────────────────────────────────────────────
 if st.session_state["assistant_messages"]:

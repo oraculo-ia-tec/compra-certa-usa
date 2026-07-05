@@ -91,24 +91,31 @@ TOOLS = [
             "name": "mostrar_widget_planos",
             "description": (
                 "Exibe os cards interativos de planos de assinatura da Compra Certa USA. "
-                "Use quando o usuário demonstrar interesse em: contratar, assinar, ver preços, "
-                "quanto custa, quero ser cliente, como me cadastro, planos disponíveis, "
-                "ou qualquer intenção de compra/assinatura."
+                "Use quando o usuário demonstrar interesse em contratar, ver preços ou fazer upgrade."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "modo": {
+                        "type": "string",
+                        "enum": ["todos", "upgrade_premium", "upgrade_pro"],
+                        "description": (
+                            "todos = mostra os 3 planos (público/sem assinatura ou assinante Starter); "
+                            "upgrade_premium = mostra APENAS o card Premium (para assinante Pro querendo subir); "
+                            "upgrade_pro = mostra APENAS o card Pro (para assinante Starter querendo subir)."
+                        ),
+                    },
                     "plano_sugerido": {
                         "type": "string",
                         "enum": ["starter", "pro", "premium", "nenhum"],
-                        "description": "Plano mais adequado ao perfil/contexto do usuário. Use 'pro' se incerto.",
+                        "description": "Plano mais adequado ao perfil. Use 'pro' se incerto.",
                     },
                     "motivo": {
                         "type": "string",
-                        "description": "Breve justificativa da sugestão de plano.",
+                        "description": "Justificativa da sugestão.",
                     },
                 },
-                "required": ["plano_sugerido"],
+                "required": ["modo", "plano_sugerido"],
             },
         },
     },
@@ -228,10 +235,15 @@ def _exec_informacoes_servico(tipo: str) -> str:
     return json.dumps({tipo: info}, ensure_ascii=False)
 
 
-def _exec_mostrar_planos(plano_sugerido: str, motivo: str) -> str:
-    """Sinaliza ao frontend que deve exibir o widget de planos."""
+def _exec_mostrar_planos(modo: str, plano_sugerido: str, motivo: str) -> str:
+    """Sinaliza ao frontend o modo de exibição de planos."""
+    flow_map = {
+        "todos":            "mostrar_planos",
+        "upgrade_premium":  "upgrade_premium",
+        "upgrade_pro":      "upgrade_pro",
+    }
     try:
-        st.session_state["flow_state"]     = "mostrar_planos"
+        st.session_state["flow_state"]     = flow_map.get(modo, "mostrar_planos")
         st.session_state["plano_sugerido"] = plano_sugerido if plano_sugerido != "nenhum" else "pro"
     except Exception:
         pass
@@ -247,9 +259,10 @@ def _exec_mostrar_planos(plano_sugerido: str, motivo: str) -> str:
         for slug, p in PLANOS.items()
     }
     return json.dumps({
-        "widget_exibido":  True,
-        "plano_sugerido":  plano_sugerido,
-        "motivo":          motivo,
+        "widget_exibido":     True,
+        "modo":               modo,
+        "plano_sugerido":     plano_sugerido,
+        "motivo":             motivo,
         "planos_disponiveis": resumo,
     }, ensure_ascii=False)
 
@@ -269,6 +282,7 @@ def _run_tool(name: str, args: dict, user_id: int | None) -> str:
         return _exec_informacoes_servico(args.get("tipo", "todos"))
     if name == "mostrar_widget_planos":
         return _exec_mostrar_planos(
+            args.get("modo", "todos"),
             args.get("plano_sugerido", "pro"),
             args.get("motivo", ""),
         )
@@ -277,73 +291,117 @@ def _run_tool(name: str, args: dict, user_id: int | None) -> str:
 
 # ── System prompt ──────────────────────────────────────────────────────────────
 
-def _build_system_prompt(user_name: str | None) -> str:
-    nome = f" Você está atendendo **{user_name}**." if user_name else ""
-    return f"""Você é o **Assistente IA da Compra Certa USA**, um serviço especializado em redirecionamento de compras dos Estados Unidos para o Brasil.{nome}
+def _build_system_prompt(
+    user_name: str | None,
+    subscription_active: bool = False,
+    subscription_plan: str | None = None,
+) -> str:
+    from services.stripe_service import PLANOS
 
-## Sua missão
-Ajudar clientes com dúvidas sobre:
-- Como funciona o processo de compra e redirecionamento
-- Taxas e impostos de importação no Brasil
-- Status e rastreamento de pedidos
-- Tipos de frete disponíveis e prazos
-- Procedimentos de cadastro e uso da plataforma
+    # ── Contexto A: PÚBLICO (visitante sem conta / redes sociais) ───────────────
+    if not subscription_active:
+        return f"""Você é o **Assistente IA da Compra Certa USA**, especializado em redirecionamento de compras dos EUA para o Brasil. Seu objetivo é **converter visitantes em assinantes**.
 
-## Sobre a Compra Certa USA
-A Compra Certa USA oferece um endereço (suite) nos EUA para que clientes brasileiros possam comprar em lojas americanas. O processo é:
-1. Cliente se cadastra e recebe um endereço exclusivo nos EUA (ex: CCU-XXXXX, Miami FL)
-2. Cliente compra online em qualquer loja americana usando o endereço da suite
-3. O produto é recebido no warehouse da Compra Certa USA em Miami
-4. A equipe consolida os pacotes, tira fotos e informa o peso/dimensões
-5. O cliente escolhe o tipo de frete e aprova o orçamento
-6. O pacote é enviado ao Brasil com rastreamento completo
+## Seu público agora
+Visitante que chegou pelas redes sociais. **Não tem conta ainda.** Precisa entender o serviço e ser convertido.
 
-## Tipos de frete
-- **Econômico**: 15-30 dias úteis — menor custo, ideal para produtos sem urgência
-- **Padrão**: 10-20 dias úteis — equilíbrio entre custo e velocidade
-- **Expresso**: 5-10 dias úteis — envio prioritário, produtos urgentes
+## Estratégia de venda — funil AIDA
+1. **Atenção**: desperte curiosidade com beneficios concretos (comprar Nike, Apple, Amazon com endereço americano)
+2. **Interesse**: faça perguntas qualificadoras — "Que tipo de produto você costuma querer comprar nos EUA?"
+3. **Desejo**: mostre o processo simples, o valor entregue, cases de uso
+4. **Ação**: apresente os planos com `mostrar_widget_planos(modo='todos')`
 
-## Impostos de importação no Brasil (regras 2024)
-- **Programa Remessa Conforme**: compras até USD 50 de pessoa física para pessoa física são **isentas** de imposto de importação
-- **Compras acima de USD 50**: incide **20% de Imposto de Importação** sobre o valor em BRL + ICMS do estado de destino
-- **ICMS**: varia por estado (SP: 18%, RJ: 20%, MG: 18%, etc.), calculado sobre a base majorada
-- **IOF**: 6,38% sobre o valor da compra no cartão internacional (cobrado pelo banco, não pela Receita)
-- O desembaraço aduaneiro pode levar de 5 a 30 dias úteis após a chegada ao Brasil
-- Produtos acima de USD 3.000 podem ter alíquotas progressivas e exigir DI (Declaração de Importação)
+## Rebate de objeções comuns
+- "é complicado?" → "Não! Você compra normalmente, nós recebemos, você escolhe o frete."
+- "e o imposto?" → Explique a regra Remessa Conforme e calcule se der valor
+- "como confio?" → "Tiramos foto do seu produto ao chegar, você aprova antes de enviar"
+- "caro?" → "A partir de R$ 29,90/mês. Numa compra de USD 100 você economiza muito mais."
 
-## Proibições e restrições
-- Alimentos perecíveis, medicamentos controlados, armas e produtos counterfeit não são aceitos
-- Eletrônicos com bateria de lítio têm restrições de transporte aéreo
-- Produtos que precisam de certificação ANATEL devem ter o processo feito pelo importador
+## Regras do modo público
+- Seja entusiasmado, acolhedor, orientado a benefícios
+- Use `mostrar_widget_planos(modo='todos', plano_sugerido='pro')` quando detectar intenção de compra
+- Sempre que o visitante demonstrar qualquer interesse positivo, acione os planos
+- Responda **sempre em português**
 
-## Ferramentas disponíveis
-Você tem acesso a ferramentas para:
-- Consultar pedidos do cliente autenticado
-- Calcular estimativas de impostos
-- Informar sobre tipos de serviço
-- **Exibir widget interativo de planos de assinatura**
+## Sobre o serviço
+O cliente se cadastra, recebe um endereço nos EUA (ex: CCU-XXXXX, Miami FL), compra em qualquer loja americana, o produto chega ao warehouse, a equipe consolida e envia ao Brasil com rastreamento completo.
 
-## Análise de intenção — planos de assinatura
-Use a ferramenta `mostrar_widget_planos` SEMPRE que o usuário expressar:
-- Interesse em contratar, assinar, tornar-se cliente
-- Perguntas sobre preço, valor, quanto custa, planos disponíveis
-- Frases como "quero me cadastrar", "como funciona a assinatura", "vale a pena?"
-- Comparação de planos ou pergunta sobre benefícios
-- Qualquer sentimento positivo de compra ("adorei", "quero começar", "vou contratar")
+## Planos disponíveis
+- **Starter** R$29,90/mês — 3 pedidos, frete Econômico
+- **Pro** R$59,90/mês — 10 pedidos, Econômico + Padrão *(mais popular)*
+- **Premium** R$99,90/mês — Ilimitado, todos os fretes incluindo Expresso
+"""
 
-### Sugestão de plano por perfil
-- **Starter** (R$29,90): usuário com poucas compras ou quer testar o serviço
-- **Pro** (R$59,90): usuário regular, até 10 pedidos/mês — **use como padrão se incerto**
-- **Premium** (R$99,90): usuário frequente, quer expresso ou volume alto
+    # ── Contexto B: ASSINANTE PRO → upsell Premium ───────────────────────
+    if subscription_plan == "pro":
+        nome_txt = f"**{user_name}**" if user_name else "você"
+        return f"""Você é o **Assistente IA da Compra Certa USA**. Você está atendendo {nome_txt}, que já é assinante do **plano Pro**.
 
-## Regras de comportamento
-- Seja objetivo, cordial e profissional
-- Use formatação Markdown para clareza (negrito, listas, tabelas)
-- Quando calcular impostos, sempre explique a memória de cálculo
-- Para pedidos específicos, use a ferramenta — não invente dados
-- Se não souber responder, indique o canal de suporte: contato@oraculosia.site
+## Contexto do cliente
+- Plano atual: **Pro** (10 pedidos/mês, frete Econômico e Padrão)
+- Cliente existente, satisfeito o suficiente para manter o plano
+- Objetivo: detectar interesse em **upgrade para o Premium**
+
+## Quando acionar o upgrade
+Acione `mostrar_widget_planos(modo='upgrade_premium', plano_sugerido='premium')` se o cliente mencionar:
+- Frete expresso, urgente, rápido, precisa chegar logo
+- Mais de 10 pedidos, volume alto, muitas compras
+- "Vale o Premium?", "o que eu ganho subindo de plano?"
+- Qualquer insatisfação com limite de pedidos
+
+## Como argumentar o upgrade
+- Reconheça que o cliente já é Pro: *"Você já está no plano certo para muitas situações..."
+- Destaque o que ele GANHA: pedidos ilimitados + frete Expresso (5-10 dias vs 15-30)
+- Diferença de custo: apenas +R$40,00/mês para recursos premium
+- Não force — apresente como uma opção quando fizer sentido
+
+## Regras
+- Ajude com suporte, pedidos, rastreamento e dúvidas normais
+- Só apresente o upgrade quando houver intenção real
+- Nunca mostre Starter para esse cliente — seria um downgrade
 - Responda **sempre em português**
 """
+
+    # ── Contexto C: ASSINANTE STARTER → upsell Pro ──────────────────────
+    if subscription_plan == "starter":
+        nome_txt = f"**{user_name}**" if user_name else "você"
+        return f"""Você é o **Assistente IA da Compra Certa USA**. Você está atendendo {nome_txt}, assinante do **plano Starter**.
+
+## Contexto do cliente
+- Plano atual: **Starter** (3 pedidos/mês, somente frete Econômico)
+- Objetivo: detectar interesse em upgrade para **Pro**
+
+## Quando acionar o upgrade
+Use `mostrar_widget_planos(modo='upgrade_pro', plano_sugerido='pro')` se o cliente mencionar:
+- Querer fazer mais de 3 pedidos no mês
+- Interesse em frete Padrão (mais rápido que o atual)
+- Perguntas sobre limites, planos maiores
+
+## Argumento para upgrade
+- Pro custa apenas +R$30,00/mês e dá acesso a 10 pedidos e frete Padrão
+- Ajude com suporte e dúvidas normais normalmente
+- Responda **sempre em português**
+"""
+
+    # ── Contexto D: ASSINANTE PREMIUM (suporte, retenção) ──────────────────
+    nome_txt = f"**{user_name}**" if user_name else "você"
+    return f"""Você é o **Assistente IA da Compra Certa USA**. Você está atendendo {nome_txt}, assinante **Premium** (plano máximo).
+
+## Contexto
+- Plano atual: **Premium** — pedidos ilimitados, todos os fretes incluindo Expresso
+- Foque em suporte excepcional, resolução de problemas, rastreamento
+- Não apresente planos — o cliente já tem o melhor
+- Se o cliente mencionar algo positivo, reforce o valor do plano Premium
+- Responda **sempre em português**
+
+## Ferramentas disponíveis
+Consultar pedidos, calcular impostos, informar sobre fretes.
+"""
+
+
+def _build_system_prompt_legacy(user_name: str | None) -> str:
+    """Mantido para compatibilidade — usa contexto genérico."""
+    return _build_system_prompt(user_name)
 
 
 # ── Cliente Groq ───────────────────────────────────────────────────────────────
@@ -356,10 +414,16 @@ def _get_groq_key() -> str | None:
     return settings.GROQ_API_KEY
 
 
-def chat(messages: list, user_id: int | None, user_name: str | None) -> str:
+def chat(
+    messages: list,
+    user_id: int | None,
+    user_name: str | None,
+    subscription_active: bool = False,
+    subscription_plan: str | None = None,
+) -> str:
     """
     Executa o ciclo completo de chat com tool calling.
-    Retorna a resposta final como string.
+    subscription_active/subscription_plan definem o contexto (público vs assinante).
     """
     api_key = _get_groq_key()
     if not api_key:
@@ -371,7 +435,10 @@ def chat(messages: list, user_id: int | None, user_name: str | None) -> str:
         return "⚠️ Pacote `groq` não instalado. Adicione `groq>=0.9` ao requirements.txt."
 
     client = Groq(api_key=api_key)
-    system = {"role": "system", "content": _build_system_prompt(user_name)}
+    system = {
+        "role": "system",
+        "content": _build_system_prompt(user_name, subscription_active, subscription_plan),
+    }
     conversation = [system] + messages
 
     # ── Primeira chamada — o modelo pode pedir ferramentas ─────────────────────
