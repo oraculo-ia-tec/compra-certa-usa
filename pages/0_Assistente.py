@@ -25,7 +25,7 @@ st.html(f"""
     100% {{ transform: scale(1.00); opacity: 1; }}
 }}
 .ccu-chat-icon-outer {{
-    width: 110px; height: 110px;
+    width: 180px; height: 180px;
     border-radius: 50%;
     border: 3px solid #3B82F6;
     margin: 0 auto 12px;
@@ -33,7 +33,7 @@ st.html(f"""
     align-items: center;
     justify-content: center;
     background: #fff;
-    padding: 4px;
+    padding: 5px;
 }}
 .ccu-chat-icon-inner {{
     width: 100%; height: 100%;
