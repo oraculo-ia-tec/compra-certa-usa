@@ -221,14 +221,7 @@ render_plans_widget()
 
 # ── Rodapé com botão de limpar ────────────────────────────────────────────────
 if st.session_state["assistant_messages"]:
-    if st.button("🗑️ Limpar conversa", use_container_width=False):
-        st.session_state["assistant_messages"] = []
-        st.session_state["flow_state"] = None
-        st.rerun()
-
-# ── Rodapé com botão de limpar ────────────────────────────────────────────────
-if st.session_state["assistant_messages"]:
-    if st.button("🗑️ Limpar conversa", use_container_width=False):
+    if st.button("🗑️ Limpar conversa", use_container_width=False, key="btn_limpar_conversa"):
         st.session_state["assistant_messages"] = []
         st.session_state["flow_state"] = None
         st.rerun()
