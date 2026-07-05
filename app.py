@@ -69,20 +69,18 @@ def _avatar_html(avatar_url, name, size=52):
 
 
 def _sidebar_logo():
-    """Logomarca oficial com borda redonda e animação neon pulsante (base64)."""
+    """Logomarca oficial com borda redonda e animação pulse na imagem."""
     st.html(f"""
     <style>
-    @keyframes neon-pulse {{
-        0%   {{ box-shadow: 0 0  8px #3B82F6, 0 0 18px #3B82F6, 0 0 34px #1E3A8A; }}
-        50%  {{ box-shadow: 0 0 20px #60A5FA, 0 0 42px #3B82F6, 0 0 70px #1E3A8A; }}
-        100% {{ box-shadow: 0 0  8px #3B82F6, 0 0 18px #3B82F6, 0 0 34px #1E3A8A; }}
+    @keyframes img-pulse {{
+        0%   {{ transform: scale(1.00); opacity: 1; }}
+        50%  {{ transform: scale(1.07); opacity: 0.88; }}
+        100% {{ transform: scale(1.00); opacity: 1; }}
     }}
-    /* Camada EXTERNA: borda + animação neon (sem overflow hidden para o glow não ser cortado) */
     .ccu-logo-outer {{
         width: 94px; height: 94px;
         border-radius: 50%;
         border: 3px solid #3B82F6;
-        animation: neon-pulse 2.4s ease-in-out infinite;
         margin: 0 auto;
         display: flex;
         align-items: center;
@@ -90,14 +88,17 @@ def _sidebar_logo():
         background: #fff;
         padding: 3px;
     }}
-    /* Camada INTERNA: clipar a imagem em círculo */
     .ccu-logo-inner {{
         width: 100%; height: 100%;
         border-radius: 50%;
         overflow: hidden;
     }}
     .ccu-logo-inner img {{
-        width: 100%; height: 100%; object-fit: cover; display: block;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        display: block;
+        animation: img-pulse 2.4s ease-in-out infinite;
+        transform-origin: center center;
     }}
     </style>
     <div style="padding:18px 0 10px;text-align:center;">
