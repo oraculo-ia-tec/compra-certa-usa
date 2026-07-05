@@ -56,16 +56,56 @@ def _avatar_html(avatar_url, name, size=52):
 
 
 def _sidebar_logo():
-    """Renderiza a logomarca oficial centralizada no topo da sidebar."""
-    col_l, col_c, col_r = st.columns([1, 4, 1])
-    with col_c:
-        st.image("assets/logo.png", use_container_width=True)
-    st.html(
-        '<p style="text-align:center;margin:4px 0 0;font-weight:800;font-size:.85rem;'
-        'color:#1E3A8A;letter-spacing:.8px;">COMPRA CERTA USA</p>'
-        '<p style="text-align:center;margin:0 0 10px;font-size:.68rem;color:#94A3B8;">'
-        'Importações dos EUA para o Brasil</p>'
-    )
+    """Logomarca oficial com borda redonda e animação neon pulsante."""
+    st.html("""
+    <style>
+    @keyframes neon-pulse {
+        0%   { box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }
+        50%  { box-shadow: 0 0 14px #60A5FA, 0 0 32px #3B82F6, 0 0 56px #1E3A8A; }
+        100% { box-shadow: 0 0  6px #3B82F6, 0 0 14px #3B82F6, 0 0 28px #1E3A8A; }
+    }
+    .ccu-logo-wrapper {
+        display: flex;
+        justify-content: center;
+        padding: 18px 0 10px;
+    }
+    .ccu-logo-circle {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        border: 3px solid #3B82F6;
+        overflow: hidden;
+        animation: neon-pulse 2.4s ease-in-out infinite;
+        background: #fff;
+    }
+    .ccu-logo-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .ccu-logo-title {
+        text-align: center;
+        font-weight: 800;
+        font-size: .92rem;
+        color: #1E3A8A;
+        letter-spacing: .8px;
+        margin: 8px 0 2px;
+    }
+    .ccu-logo-sub {
+        text-align: center;
+        font-size: .67rem;
+        color: #94A3B8;
+        margin: 0 0 10px;
+    }
+    </style>
+    <div class="ccu-logo-wrapper">
+      <div class="ccu-logo-circle">
+        <img src="app/static/logo.png" alt="Compra Certa USA">
+      </div>
+    </div>
+    <p class="ccu-logo-title">COMPRA CERTA USA</p>
+    <p class="ccu-logo-sub">Importações dos EUA para o Brasil</p>
+    """)
 
 
 def _section_label(text):
@@ -96,7 +136,7 @@ if is_logged_in():
     pg = st.navigation(pages_map, position="hidden")
 
     with st.sidebar:
-        st.html(_LOGO_HTML)
+        _sidebar_logo()
 
         st.html(f"""
         <div style="border:1.5px solid #CBD5E1;border-radius:10px;padding:10px 12px;
