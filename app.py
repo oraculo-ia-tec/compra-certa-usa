@@ -3,13 +3,16 @@ COMPRA CERTA USA — Ponto de entrada Streamlit.
 Usa st.navigation(position="hidden") + st.page_link() para controle total
 da ordem da sidebar: logo → card → menu → divider → botões.
 """
+from PIL import Image
 import streamlit as st
 from models.seed import init_db_and_seed
 from components.session import is_logged_in, get_current_user, clear_session
 
+_favicon = Image.open("assets/icon.png")
+
 st.set_page_config(
     page_title="COMPRA CERTA USA",
-    page_icon="📦",
+    page_icon=_favicon,
     layout="wide",
 )
 
@@ -52,19 +55,17 @@ def _avatar_html(avatar_url, name, size=52):
     )
 
 
-_LOGO_HTML = """
-<div style="text-align:center;padding:18px 0 14px;">
-  <div style="display:inline-flex;align-items:center;justify-content:center;
-              background:#1E3A8A;border-radius:50%;width:76px;height:76px;
-              font-size:2.2rem;border:3px solid #3B82F6;
-              box-shadow:0 4px 16px rgba(30,58,138,.30);">
-    📦
-  </div>
-  <p style="margin:8px 0 2px;font-weight:800;font-size:.95rem;
-            color:#1E3A8A;letter-spacing:.8px;">COMPRA CERTA USA</p>
-  <p style="margin:0;font-size:.68rem;color:#94A3B8;">Importações dos EUA para o Brasil</p>
-</div>
-"""
+def _sidebar_logo():
+    """Renderiza a logomarca oficial centralizada no topo da sidebar."""
+    col_l, col_c, col_r = st.columns([1, 4, 1])
+    with col_c:
+        st.image("assets/logo.png", use_container_width=True)
+    st.html(
+        '<p style="text-align:center;margin:4px 0 0;font-weight:800;font-size:.85rem;'
+        'color:#1E3A8A;letter-spacing:.8px;">COMPRA CERTA USA</p>'
+        '<p style="text-align:center;margin:0 0 10px;font-size:.68rem;color:#94A3B8;">'
+        'Importações dos EUA para o Brasil</p>'
+    )
 
 
 def _section_label(text):
@@ -147,7 +148,7 @@ else:
     pg = st.navigation(pages_map, position="hidden")
 
     with st.sidebar:
-        st.html(_LOGO_HTML)
+        _sidebar_logo()
         _section_label("Assistente")
         st.page_link(assistente_pub, label="Assistente IA", icon="🤖")
         _section_label("Acesso")

@@ -5,3 +5,4 @@ bcrypt>=4.1
 python-jose[cryptography]>=3.3
 loguru>=0.7
 groq>=0.9
+Pillow>=10.0

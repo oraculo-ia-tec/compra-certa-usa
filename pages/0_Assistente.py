@@ -6,18 +6,14 @@ from services.assistant import chat
 
 inject_css()
 
-# ── Cabeçalho ─────────────────────────────────────────────────────────────────
-st.html("""
-<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
-  <div style="background:#1E3A8A;border-radius:12px;width:48px;height:48px;
-              display:flex;align-items:center;justify-content:center;font-size:24px;">🤖</div>
-  <div>
-    <p style="margin:0;font-size:1.4rem;font-weight:700;color:#1E3A8A;">Assistente Compra Certa USA</p>
-    <p style="margin:0;font-size:.85rem;color:#64748B;">Tire dúvidas sobre compras, taxas e seus pedidos</p>
-  </div>
-</div>
-<hr style="border:none;border-top:2px solid #E2E8F0;margin:.5rem 0 1rem;">
-""")
+# ── Cabeçalho com ícone oficial ────────────────────────────────────────────────
+col_icon, col_title = st.columns([1, 8])
+with col_icon:
+    st.image("assets/icon.png", use_container_width=True)
+with col_title:
+    st.markdown("## Assistente Compra Certa USA")
+    st.caption("Tire dúvidas sobre compras, taxas e seus pedidos")
+st.divider()
 
 # ── Contexto do usuário ────────────────────────────────────────────────────────
 user_id   = get_user_id() if is_logged_in() else None
